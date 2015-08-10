@@ -1,14 +1,19 @@
+// 2048 like game
+
+#include <ncurses.h>
+#include <cstdlib> // rand() 
+#include <cstring> // memset()
+#include <cstdio>
+#include <string>
+#include <iostream>
+using namespace std;
+
+
 class Field{
+    int score;
     int box[16];
     void rotate();
-    void shift();
-public:
-    enum Direction { LEFT = 0, DOWN = 1, RIGHT = 2, UP = 3 };
-
-    Field(){
-	memset(box, -1, sizeof(box) );
-	addRandom();
-    }
+    bool shift();
 
     void addRandom(){
 	while(true){  // TODO: detect all spaces are exausted here
@@ -19,23 +24,51 @@ public:
 	    }
 	}
     }
+public:
+    enum Direction { LEFT = 0, DOWN = 1, RIGHT = 2, UP = 3 };
+    int scores(){ return score; }
+    int get(int x, int y){ return box[y*4+x]; }
 
-    void modify(Direction dir){
+    Field(): score(0) {
+	memset(box, -1, sizeof(box) );
+	addRandom();
+    }
+
+
+    void modify(Direction dir){ // take one step in the game
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		shift(); // left
+		if( shift() ) { // left
+		    addRandom();
+		}
 	    }
 	    rotate();
 	}
     }
-    
-    void print(){
-	for(int i=0; i < 16; ++i){
-	    cout << (i%4? "" : endl);
-	    printf("%2d", box[i]); // do not mix
-	}
-    }
 };
+
+
+bool Field::shift(){
+    bool modified = false;
+    for(int i=0; i < 4; ++i){
+        for(int j=1; j < 4; ++j){
+            int idx = i*4+j;
+	    if(box[idx]>=0){
+	        if(box[idx-1]==-1){ // empty space to the left
+	      	    box[idx-1]=box[idx];
+		    box[idx]=-1;
+		    modified = true;
+		} else if(box[idx-1]==box[idx]){ // equal to the left
+		    ++box[idx-1];
+		    box[idx]=-1;
+		    modified = true;
+		    ++score;
+		}
+      	    }
+        }
+    }
+    return modified;
+}
 
 
 void Field::rotate(){
@@ -65,31 +98,28 @@ void Field::rotate(){
 }
 
 
-int input(){
-    char c;
-    while(true){
-	cin >> c;
-	switch(c){
-	    case 'j': return j;
-	    case 'k': return k;
-	    case 'i': return i;
-	    case 'm': return m;
-	}
-    }
+void show(const Field& field){
 }
 
 
 int main(int argc, char* argv[]){
+    initscr(); // entering ncurses mode
+    noecho();  // pressed symbols wont be printed to screen
+    cbreak();  // disable line buffering
+    //    raw();     // CTRL-C and others do not generate signals
+
     Field field;
     while(true){
 	show(field);
-	int key = input();
+	int key = getch();
 	switch(key){
 	    case 'j': field.modify(Field::LEFT);
 	    case 'k': field.modify(Field::RIGHT);
 	    case 'i': field.modify(Field::UP);
 	    case 'm': field.modify(Field::DOWN);
+	    case 'q': break;
 	}
-	field.addRandom();
     }
+    endwin(); // exit ncurses mode
+    cout << field.scores() << endl;
 }
