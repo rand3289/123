@@ -1,5 +1,5 @@
 // 2048 like game
-
+// to compile: g++ 2048.cpp -lncurses
 #include <ncurses.h>
 #include <cstdlib> // rand() 
 #include <cstring> // memset()
@@ -7,6 +7,10 @@
 #include <string>
 #include <iostream>
 using namespace std;
+
+
+class Field;
+void show(const Field&, int x);
 
 
 class Field{
@@ -26,8 +30,8 @@ class Field{
     }
 public:
     enum Direction { LEFT = 0, DOWN = 1, RIGHT = 2, UP = 3 };
-    int scores(){ return score; }
-    int get(int x, int y){ return box[y*4+x]; }
+    int scores() const { return score; }
+    int get(int x, int y) const { return box[y*4+x]; }
 
     Field(): score(0) {
 	memset(box, -1, sizeof(box) );
@@ -36,13 +40,16 @@ public:
 
 
     void modify(Direction dir){ // take one step in the game
+	bool shifted = false;
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		if( shift() ) { // left
-		    addRandom();
-		}
+		shifted = shift();
 	    }
 	    rotate();
+	    show(*this,i+1);
+	}
+	if( shifted ) { // add random only if anything shifted
+	    addRandom();
 	}
     }
 };
@@ -98,7 +105,17 @@ void Field::rotate(){
 }
 
 
-void show(const Field& field){
+void show(const Field& field, int x){
+    static int dy = 0; // DEBUG
+    char buff[32];
+    for(int y=0; y < 4; ++y){
+	sprintf(buff,"% 2d% 2d% 2d% 2d",field.get(0,y),field.get(1,y),field.get(2,y), field.get(3,y));
+	mvaddstr(y+dy,x*20,buff);
+    }
+    refresh(); // ncurses
+    if(4==x){
+	dy+=5; // DEBUG
+    }
 }
 
 
@@ -109,15 +126,16 @@ int main(int argc, char* argv[]){
     //    raw();     // CTRL-C and others do not generate signals
 
     Field field;
-    while(true){
-	show(field);
+    bool run = true;
+    while(run) {
+	show(field ,0);
 	int key = getch();
 	switch(key){
-	    case 'j': field.modify(Field::LEFT);
-	    case 'k': field.modify(Field::RIGHT);
-	    case 'i': field.modify(Field::UP);
-	    case 'm': field.modify(Field::DOWN);
-	    case 'q': break;
+	    case 'j': field.modify(Field::LEFT);  break;
+	    case 'k': field.modify(Field::RIGHT); break;
+	    case 'i': field.modify(Field::UP);    break;
+	    case 'm': field.modify(Field::DOWN);  break;
+	    case 'q': run = false;                break;
 	}
     }
     endwin(); // exit ncurses mode
