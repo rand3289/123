@@ -1,11 +1,13 @@
 // 2048 like game
-// to compile: g++ 2048.cpp -lncurses
+// to compile: g++ -std=c++11 -lncurses 123.cpp
 #include <ncurses.h>
 #include <cstdlib> // rand() 
 #include <cstring> // memset()
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <functional> // bind()
+using namespace std::placeholders; // _1
 using namespace std;
 
 
@@ -17,8 +19,6 @@ class Field{
     int score;
     int box[16];
     void rotate();
-    bool shift();
-    bool add();
 
     void addRandom(){
 	while(true){  // TODO: detect all spaces are exausted here
@@ -29,22 +29,57 @@ class Field{
 	    }
 	}
     }
+
+
+bool combine(int i){
+    if( box[i]>=0 && box[i]==box[i+1] ){
+	++box[i];
+	box[i+1] = -1;
+	return true;
+    }
+    return false;
+}
+
+
+bool shift(int i){
+    if( box[i]<0 ) {
+	box[i] = box[i+1];
+	box[i+1] = -1;
+	return true;
+    }
+    return false;
+}
+
+
+bool foreach( std::_Mem_fn<bool (Field::*)(int)> f){
+    const static int bz [] = {0,1,2, 4,5,6, 8,9,10, 12,13,14 };
+    bool ret = false;
+    for(int i: bz){
+	ret |= f(this,i);
+    }
+    return ret;
+}
+
+
 public:
     enum Direction { LEFT = 0, DOWN = 1, RIGHT = 2, UP = 3 };
     int scores() const { return score; }
     int get(int x, int y) const { return box[y*4+x]; }
 
     Field(): score(0) {
-	memset(box, -1, sizeof(box) );
+	memset(box, -1, sizeof(box) ); // TODO: check if this is initialized properly
 	addRandom();
     }
 
 
-    void modify(Direction dir){ // take one step in the game
+    void step(Direction dir){ // take one step in the game
 	bool shifted = false;
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		shifted = shift() | add();
+		shifted |= foreach( std::mem_fn(&Field::combine) );
+		shifted |= foreach( std::mem_fn(&Field::shift) );
+		shifted |= foreach( std::mem_fn(&Field::shift) );
+		shifted |= foreach( std::mem_fn(&Field::shift) );
 	    }
 	    rotate();
 	    show(*this,i+1);
@@ -56,11 +91,14 @@ public:
 };
 
 
+
+/*
 bool Field::add(){
     bool modified = false;
     for(int i=0; i<sizeof(box); ++i){
 	if(3!=(i%4) && box[i] >=0 && box[i] == box[i+1]){
-	    box[i] = box[i+1];
+	    ++box[i];
+	    box[i+1] = -1;
 	}
     }
 }
@@ -99,7 +137,7 @@ bool Field::shift(){
     return modified;
 }
 
-/*
+
 bool Field::shift(){
     bool modified = false;
     for(int i=0; i < 4; ++i){
@@ -176,11 +214,11 @@ int main(int argc, char* argv[]){
 	show(field ,0);
 	int key = getch();
 	switch(key){
-	    case 'j': field.modify(Field::LEFT);  break;
-	    case 'k': field.modify(Field::RIGHT); break;
-	    case 'i': field.modify(Field::UP);    break;
-	    case 'm': field.modify(Field::DOWN);  break;
-	    case 'q': run = false;                break;
+	    case 'j': field.step(Field::LEFT);  break;
+	    case 'k': field.step(Field::RIGHT); break;
+	    case 'i': field.step(Field::UP);    break;
+	    case 'm': field.step(Field::DOWN);  break;
+	    case 'q': run = false;              break;
 	}
     }
     endwin(); // exit ncurses mode
