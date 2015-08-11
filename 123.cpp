@@ -7,7 +7,7 @@
 #include <string>
 #include <iostream>
 #include <functional> // bind()
-using namespace std::placeholders; // _1
+//using namespace std::placeholders; // _1
 using namespace std;
 
 
@@ -92,75 +92,6 @@ public:
 
 
 
-/*
-bool Field::add(){
-    bool modified = false;
-    for(int i=0; i<sizeof(box); ++i){
-	if(3!=(i%4) && box[i] >=0 && box[i] == box[i+1]){
-	    ++box[i];
-	    box[i+1] = -1;
-	}
-    }
-}
-
-
-bool Field::add(){
-    bool modified = false;
-    for(int y=0; y<4; ++y){
-        for(int x=0; x<3; ++x){
-	    int idx = y*4+x;
-	    if( box[idx]>=0 && box[idx] == box[idx+1] ){
-		++box[idx];
-		box[idx+1] = -1;
-		modified = true;
-		++score;
-	    }
-	}
-    }
-    return modified;
-}
-
-
-bool Field::shift(){
-    bool modified = false;
-    for(int y=0; y<4; ++y){         // for every row
-	for(int i=0; i<3;++i){      // 3 times
-	    for(int x=0; x<3; ++i){ // shift cells to the left
-	        int idx = y*4+x;
-	        if( box[idx] < 0){
-		    box[idx] = box[idx+1];
-		    modified |= (box[idx]>=0); // not empty any more?
-	        }
-	    }
-	}
-    }
-    return modified;
-}
-
-
-bool Field::shift(){
-    bool modified = false;
-    for(int i=0; i < 4; ++i){
-        for(int j=1; j < 4; ++j){
-            int idx = i*4+j;
-	    if(box[idx]>=0){
-	        if(box[idx-1]==-1){ // empty space to the left
-	      	    box[idx-1]=box[idx];
-		    box[idx]=-1;
-		    modified = true;
-		} else if(box[idx-1]==box[idx]){ // equal to the left
-		    ++box[idx-1];
-		    box[idx]=-1;
-		    modified = true;
-		    ++score;
-		}
-      	    }
-        }
-    }
-    return modified;
-}
-*/
-
 void Field::rotate(){
     int temp = box[0];
     box[0] = box[12];
@@ -188,15 +119,21 @@ void Field::rotate(){
 }
 
 
-void show(const Field& field, int x){
+void show(const Field& field, int dx){
     static int dy = 0; // DEBUG
     char buff[32];
     for(int y=0; y < 4; ++y){
-	sprintf(buff,"% 2d% 2d% 2d% 2d",field.get(0,y),field.get(1,y),field.get(2,y), field.get(3,y));
-	mvaddstr(y+dy,x*20,buff);
+	for(int x=0; x <4; ++x){
+	    if(-1 != field.get(x,y)){
+		sprintf(buff,"% 2d",field.get(x,y) );
+	    } else {
+		sprintf(buff,"--");
+	    }
+	    mvaddstr(y+dy, x*2+dx*20, buff);
+	}
     }
     refresh(); // ncurses
-    if(4==x){
+    if(4==dx){
 	dy+=5; // DEBUG
     }
 }
