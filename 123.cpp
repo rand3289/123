@@ -18,6 +18,7 @@ class Field{
     int box[16];
     void rotate();
     bool shift();
+    bool add();
 
     void addRandom(){
 	while(true){  // TODO: detect all spaces are exausted here
@@ -43,7 +44,7 @@ public:
 	bool shifted = false;
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		shifted = shift();
+		shifted = shift() | add();
 	    }
 	    rotate();
 	    show(*this,i+1);
@@ -55,6 +56,50 @@ public:
 };
 
 
+bool Field::add(){
+    bool modified = false;
+    for(int i=0; i<sizeof(box); ++i){
+	if(3!=(i%4) && box[i] >=0 && box[i] == box[i+1]){
+	    box[i] = box[i+1];
+	}
+    }
+}
+
+
+bool Field::add(){
+    bool modified = false;
+    for(int y=0; y<4; ++y){
+        for(int x=0; x<3; ++x){
+	    int idx = y*4+x;
+	    if( box[idx]>=0 && box[idx] == box[idx+1] ){
+		++box[idx];
+		box[idx+1] = -1;
+		modified = true;
+		++score;
+	    }
+	}
+    }
+    return modified;
+}
+
+
+bool Field::shift(){
+    bool modified = false;
+    for(int y=0; y<4; ++y){         // for every row
+	for(int i=0; i<3;++i){      // 3 times
+	    for(int x=0; x<3; ++i){ // shift cells to the left
+	        int idx = y*4+x;
+	        if( box[idx] < 0){
+		    box[idx] = box[idx+1];
+		    modified |= (box[idx]>=0); // not empty any more?
+	        }
+	    }
+	}
+    }
+    return modified;
+}
+
+/*
 bool Field::shift(){
     bool modified = false;
     for(int i=0; i < 4; ++i){
@@ -76,7 +121,7 @@ bool Field::shift(){
     }
     return modified;
 }
-
+*/
 
 void Field::rotate(){
     int temp = box[0];
