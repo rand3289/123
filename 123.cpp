@@ -1,12 +1,12 @@
-// 2048 like game
+// text mode 2048 like game for UNIX terminal
 // to compile: g++ -std=c++11 -lncurses 123.cpp
 #include <ncurses.h>
 #include <cstdlib> // rand() 
-#include <cstring> // memset()
+//#include <cstring> // memset()
 #include <cstdio>
 #include <string>
 #include <iostream>
-#include <functional> // bind()
+#include <functional> // bind(), mem_fn()
 //using namespace std::placeholders; // _1
 using namespace std;
 
@@ -67,7 +67,7 @@ public:
     int get(int x, int y) const { return box[y*4+x]; }
 
     Field(): score(0) {
-	memset(box, -1, sizeof(box) ); // TODO: check if this is initialized properly
+	for(int i=0; i<16; ++i){ box[i] = -1; }
 	addRandom();
     }
 
@@ -76,10 +76,10 @@ public:
 	bool shifted = false;
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		shifted |= foreach( std::mem_fn(&Field::combine) );
-		shifted |= foreach( std::mem_fn(&Field::shift) );
-		shifted |= foreach( std::mem_fn(&Field::shift) );
-		shifted |= foreach( std::mem_fn(&Field::shift) );
+		    shifted |= foreach( std::mem_fn(&Field::shift) );
+		    shifted |= foreach( std::mem_fn(&Field::shift) );
+		    shifted |= foreach( std::mem_fn(&Field::shift) );
+		    shifted |= foreach( std::mem_fn(&Field::combine) );
 	    }
 	    rotate();
 	    show(*this,i+1);
@@ -122,14 +122,10 @@ void Field::rotate(){
 void show(const Field& field, int dx){
     static int dy = 0; // DEBUG
     char buff[32];
-    for(int y=0; y < 4; ++y){
+    for(int y=0; y < 4; ++y){ //TODO: iterate 0 through 15
 	for(int x=0; x <4; ++x){
-	    if(-1 != field.get(x,y)){
-		sprintf(buff,"% 2d",field.get(x,y) );
-	    } else {
-		sprintf(buff,"--");
-	    }
-	    mvaddstr(y+dy, x*2+dx*20, buff);
+	    sprintf(buff,"% 2d",field.get(x,y) );
+	    mvaddstr(y+dy, x*2+dx*20, (field.get(x,y) == -1) ? "--" : buff );
 	}
     }
     refresh(); // ncurses
