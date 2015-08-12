@@ -18,13 +18,13 @@ class Field{
     int box[16];
     void rotate();
 
-    int addRandom(){
+    void addRandom(){
 	addRand = false;
 	while(true){  // TODO: detect all spaces are exausted here
 	    int idx = rand()%16;
 	    if(-1==box[idx]){
-		box[idx] = 0;
-		return idx;
+		box[idx] = rand()%2 ? 0 : 1;
+		return;
 	    }
 	}
     }
@@ -41,7 +41,7 @@ void combine(int i){
 
 
 void shift(int i){
-    if( box[i]<0 ) {
+    if( box[i]<0 && box[i+1]>=0 ) {
 	box[i] = box[i+1];
 	box[i+1] = -1;
 	addRand = true;
@@ -69,7 +69,7 @@ public:
     }
 
 
-    int step(Direction dir){ // take one step in the game
+    void step(Direction dir){ // take one step in the game
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
 		foreach( std::mem_fn(&Field::shift) );
@@ -82,9 +82,8 @@ public:
 	    rotate();
 	}
 	if( addRand ) { // add random if fied was modified by shift() or combine()
-	    return addRandom();
+	    addRandom();
 	}
-	return -1;
     }
 };
 
@@ -117,7 +116,7 @@ void Field::rotate(){
 }
 
 
-void show(const Field& field, int added){
+void show(const Field& field){
     char buff[32];
     for(int y=0; y < 4; ++y){ //TODO: iterate 0 through 15
 	for(int x=0; x <4; ++x){
@@ -125,7 +124,6 @@ void show(const Field& field, int added){
 	    mvaddstr(y, x*2, (field.get(x,y) == -1) ? "--" : buff );
 	}
     }
-    if(added >=0){ move( (added/4)*2, (added%4)*2 ); } // leave the cursor wher the last entry was added
     refresh(); // ncurses
 }
 
@@ -146,21 +144,20 @@ int main(int argc, char* argv[]){
     Field field;
     bool run = true;
     while(run) {
-	int added = -1;
-	show(field, added);
+	show(field);
 	int key = getch();
 	//	cout << key << " ";
 	switch(key){
 	    case KEY_LEFT2:
-	    case KEY_LEFT:  added = field.step(Field::LEFT);  break;
+	    case KEY_LEFT:  field.step(Field::LEFT);  break;
 	    case KEY_RIGHT2:
-	    case KEY_RIGHT: added = field.step(Field::RIGHT); break;
+	    case KEY_RIGHT: field.step(Field::RIGHT); break;
 	    case KEY_UP2:
-	    case KEY_UP:    added = field.step(Field::UP);    break;
+	    case KEY_UP:    field.step(Field::UP);    break;
 	    case KEY_DOWN2:
-	    case KEY_DOWN:  added = field.step(Field::DOWN);  break;
+	    case KEY_DOWN:  field.step(Field::DOWN);  break;
 	    case 'Q':
-	    case 'q': run = false;              break;
+	    case 'q': run = false;                    break;
 	}
     }
     endwin(); // exit ncurses mode
