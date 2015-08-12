@@ -1,4 +1,4 @@
-// text mode 2048 like game for UNIX terminal
+// 123 is a text mode 2048 like game for UNIX terminal
 // to compile: g++ -std=c++11 -lncurses 123.cpp
 #include <ncurses.h>  // in emacs Ctl-x-o on this guy to open
 #include <cstdlib>    // rand() 
@@ -8,8 +8,13 @@
 #include <iostream>
 using namespace std;
 
-// TODO: change to arrow keys, addRand is not set correctly when nothing is shifted
 
+#define KEY_UP2    65
+#define KEY_DOWN2  66
+#define KEY_RIGHT2 67
+#define KEY_LEFT2  68
+
+#define EMPTY (-1)
 
 
 class Field{
@@ -20,11 +25,11 @@ class Field{
 
     void addRandom(){
 	addRand = false;
-	while(true){  // TODO: detect all spaces are exausted here
-	    int idx = rand()%16;
-	    if(-1==box[idx]){
-		box[idx] = rand()%2 ? 0 : 1;
-		return;
+	while(true){  // TODO: detect all spaces are exausted here instead of making the user press Q
+	    int& val = box[ rand()%16 ];
+	    if( EMPTY==val ){
+			val = rand()%3 ? 0 : 1; // 66% of getting a 0
+			return;
 	    }
 	}
     }
@@ -33,7 +38,7 @@ class Field{
 void combine(int i){
     if( box[i]>=0 && box[i]==box[i+1] ){
 	++box[i];
-	box[i+1] = -1;
+	box[i+1] = EMPTY;
 	++score;
 	addRand = true;
     }
@@ -42,17 +47,15 @@ void combine(int i){
 
 void shift(int i){
     if( box[i]<0 && box[i+1]>=0 ) {
-	box[i] = box[i+1];
-	box[i+1] = -1;
+	swap( box[i], box[i+1] );
 	addRand = true;
     }
 }
 
 
-// for each active squares (left 3 in each line)
+// for each active (left 3 in each line) square
 void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
-    const static int bz [] = {0,1,2, 4,5,6, 8,9,10, 12,13,14 };
-    for(int i: bz){
+    for(int i: {0,1,2, 4,5,6, 8,9,10, 12,13,14 } ){
 	f(this,i); // lol "f this"
     }
 }
@@ -64,7 +67,7 @@ public:
     int get(int x, int y) const { return box[y*4+x]; }
 
     Field(): addRand(false), score(0) {
-	for(int i=0; i<16; ++i){ box[i] = -1; }
+	for(int i=0; i<16; ++i){ box[i] = EMPTY; }
 	addRandom();
     }
 
@@ -121,17 +124,12 @@ void show(const Field& field){
     for(int y=0; y < 4; ++y){ //TODO: iterate 0 through 15
 	for(int x=0; x <4; ++x){
 	    sprintf(buff,"% 2d",field.get(x,y) );
-	    mvaddstr(y, x*2, (field.get(x,y) == -1) ? "--" : buff );
+	    mvaddstr(y, x*2, (field.get(x,y) == EMPTY) ? "--" : buff );
 	}
     }
     refresh(); // ncurses
 }
 
-
-#define KEY_UP2    65
-#define KEY_DOWN2  66
-#define KEY_RIGHT2 67
-#define KEY_LEFT2  68
 
 
 int main(int argc, char* argv[]){
