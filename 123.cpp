@@ -1,63 +1,60 @@
 // text mode 2048 like game for UNIX terminal
 // to compile: g++ -std=c++11 -lncurses 123.cpp
-#include <ncurses.h>
-#include <cstdlib> // rand() 
-//#include <cstring> // memset()
+#include <ncurses.h>  // in emacs Ctl-x-o on this guy to open
+#include <cstdlib>    // rand() 
+#include <functional> // mem_fn()
 #include <cstdio>
 #include <string>
 #include <iostream>
-#include <functional> // bind(), mem_fn()
-//using namespace std::placeholders; // _1
 using namespace std;
 
+// TODO: change to arrow keys, addRand is not set correctly when nothing is shifted
 
-class Field;
-void show(const Field&, int x);
 
 
 class Field{
+    bool addRand;
     int score;
     int box[16];
     void rotate();
 
-    void addRandom(){
+    int addRandom(){
+	addRand = false;
 	while(true){  // TODO: detect all spaces are exausted here
 	    int idx = rand()%16;
 	    if(-1==box[idx]){
 		box[idx] = 0;
-		return;
+		return idx;
 	    }
 	}
     }
 
 
-bool combine(int i){
+void combine(int i){
     if( box[i]>=0 && box[i]==box[i+1] ){
 	++box[i];
 	box[i+1] = -1;
-	return true;
+	++score;
+	addRand = true;
     }
-    return false;
 }
 
 
-bool shift(int i){
+void shift(int i){
     if( box[i]<0 ) {
 	box[i] = box[i+1];
 	box[i+1] = -1;
-	return true;
+	addRand = true;
     }
-    return false;
 }
 
 
-bool foreach( std::_Mem_fn<bool (Field::*)(int)> f){
+// for each active squares (left 3 in each line)
+void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
     const static int bz [] = {0,1,2, 4,5,6, 8,9,10, 12,13,14 };
-    bool ret = false;
     for(int i: bz){
-	ret |= f(this,i);
+	f(this,i); // lol "f this"
     }
-    return ret;
 }
 
 
@@ -66,27 +63,28 @@ public:
     int scores() const { return score; }
     int get(int x, int y) const { return box[y*4+x]; }
 
-    Field(): score(0) {
+    Field(): addRand(false), score(0) {
 	for(int i=0; i<16; ++i){ box[i] = -1; }
 	addRandom();
     }
 
 
-    void step(Direction dir){ // take one step in the game
-	bool shifted = false;
+    int step(Direction dir){ // take one step in the game
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
-		    shifted |= foreach( std::mem_fn(&Field::shift) );
-		    shifted |= foreach( std::mem_fn(&Field::shift) );
-		    shifted |= foreach( std::mem_fn(&Field::shift) );
-		    shifted |= foreach( std::mem_fn(&Field::combine) );
+		foreach( std::mem_fn(&Field::shift) );
+		foreach( std::mem_fn(&Field::shift) );
+		foreach( std::mem_fn(&Field::shift) );
+		foreach( std::mem_fn(&Field::combine) );
+		foreach( std::mem_fn(&Field::shift) );
+		foreach( std::mem_fn(&Field::shift) );
 	    }
 	    rotate();
-	    show(*this,i+1);
 	}
-	if( shifted ) { // add random only if anything shifted
-	    addRandom();
+	if( addRand ) { // add random if fied was modified by shift() or combine()
+	    return addRandom();
 	}
+	return -1;
     }
 };
 
@@ -119,38 +117,49 @@ void Field::rotate(){
 }
 
 
-void show(const Field& field, int dx){
-    static int dy = 0; // DEBUG
+void show(const Field& field, int added){
     char buff[32];
     for(int y=0; y < 4; ++y){ //TODO: iterate 0 through 15
 	for(int x=0; x <4; ++x){
 	    sprintf(buff,"% 2d",field.get(x,y) );
-	    mvaddstr(y+dy, x*2+dx*20, (field.get(x,y) == -1) ? "--" : buff );
+	    mvaddstr(y, x*2, (field.get(x,y) == -1) ? "--" : buff );
 	}
     }
+    if(added >=0){ move( (added/4)*2, (added%4)*2 ); } // leave the cursor wher the last entry was added
     refresh(); // ncurses
-    if(4==dx){
-	dy+=5; // DEBUG
-    }
 }
 
 
+#define KEY_UP2    65
+#define KEY_DOWN2  66
+#define KEY_RIGHT2 67
+#define KEY_LEFT2  68
+
+
 int main(int argc, char* argv[]){
-    initscr(); // entering ncurses mode
-    noecho();  // pressed symbols wont be printed to screen
-    cbreak();  // disable line buffering
-    //    raw();     // CTRL-C and others do not generate signals
+    initscr();   // entering ncurses mode
+    //    cbreak();    // disable line buffering
+    noecho();    // pressed symbols wont be printed to screen
+    curs_set(0); // hide the cursor
+    srand(time(0));
 
     Field field;
     bool run = true;
     while(run) {
-	show(field ,0);
+	int added = -1;
+	show(field, added);
 	int key = getch();
+	//	cout << key << " ";
 	switch(key){
-	    case 'j': field.step(Field::LEFT);  break;
-	    case 'k': field.step(Field::RIGHT); break;
-	    case 'i': field.step(Field::UP);    break;
-	    case 'm': field.step(Field::DOWN);  break;
+	    case KEY_LEFT2:
+	    case KEY_LEFT:  added = field.step(Field::LEFT);  break;
+	    case KEY_RIGHT2:
+	    case KEY_RIGHT: added = field.step(Field::RIGHT); break;
+	    case KEY_UP2:
+	    case KEY_UP:    added = field.step(Field::UP);    break;
+	    case KEY_DOWN2:
+	    case KEY_DOWN:  added = field.step(Field::DOWN);  break;
+	    case 'Q':
 	    case 'q': run = false;              break;
 	}
     }
