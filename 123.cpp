@@ -21,44 +21,58 @@ class Field{
     bool addRand;
     int score;
     int box[16];
-    void rotate();
 
     void addRandom(){
 	addRand = false;
 	while(true){  // TODO: detect all spaces are exausted here instead of making the user press Q
 	    int& val = box[ rand()%16 ];
 	    if( EMPTY==val ){
-			val = rand()%3 ? 0 : 1; // 66% of getting a 0
-			return;
+		val = rand()%3 ? 0 : 1; // 66% chance of getting a 0
+		return;
 	    }
 	}
     }
 
 
-void combine(int i){
-    if( box[i]>=0 && box[i]==box[i+1] ){
-	++box[i];
-	box[i+1] = EMPTY;
-	++score;
-	addRand = true;
+    void combine(int i){
+	if( box[i]>=0 && box[i]==box[i+1] ){
+	    ++box[i];
+	    box[i+1] = EMPTY;
+	    ++score;
+	    addRand = true;
+	}
     }
-}
 
 
-void shift(int i){
-    if( box[i]<0 && box[i+1]>=0 ) {
-	swap( box[i], box[i+1] );
-	addRand = true;
+    void shift(int i){
+	if( box[i]<0 && box[i+1]>=0 ) {
+	    swap( box[i], box[i+1] );
+	    addRand = true;
+	}
     }
-}
 
 
-// for each active (left 3 in each line) square
-void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
-    for(int i: {0,1,2, 4,5,6, 8,9,10, 12,13,14 } ){
-	f(this,i); // lol "f this"
+    // This is how the grid looks like for the followin two functions
+    //  0  1  2  3
+    //  4  5  6  7
+    //  8  9 10 11
+    // 12 13 14 15
+
+    // for each active (left 3 in each line) square
+    void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
+	for(int i: {0,1,2, 4,5,6, 8,9,10, 12,13,14 } ){
+	    f(this,i); // lol "f this"
+	}
     }
-}
+
+
+    void rotate(){
+	static const int rotated[] = {12,8,4,12,13,9,9,8,14,10,10,13,15}; // guess why it works :)
+	for(int i=0; i<SIZE(rotated); ++i){
+	    int idx = rotated[i];
+	    std::swap(box[i], box[idx]);
+	}
+    }
 
 
 public:
@@ -91,15 +105,6 @@ public:
 };
 
 
-void Field::rotate(){
-    static const int rotated[] = {12,8,4,12,13,9,9,8,14,10,10,13,15};
-    for(int i=0; i<SIZE(rotated); ++i){
-	int idx = rotated[i];
-	std::swap(box[i], box[idx]);
-    }
-}
-
-
 
 void show(const Field& field){
     char buff[4];
@@ -115,9 +120,9 @@ void show(const Field& field){
 
 
 int main(int argc, char* argv[]){
-    initscr();   // entering ncurses mode
-    //    cbreak();    // disable line buffering
-    noecho();    // pressed symbols wont be printed to screen
+    initscr();   // ncurses mode
+    cbreak();    // disable input buffering
+    noecho();    // 
     curs_set(0); // hide the cursor
     srand(time(0));
 
