@@ -15,7 +15,7 @@ using namespace std;
 #define KEY_LEFT2  68
 
 #define EMPTY (-1)
-
+#define SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 class Field{
     bool addRand;
@@ -91,39 +91,21 @@ public:
 };
 
 
-
 void Field::rotate(){
-    int temp = box[0];
-    box[0] = box[12];
-    box[12] = box[15];
-    box[15] = box[3];
-    box[3] = temp;
-
-    temp = box[1];
-    box[1] = box[8];
-    box[8] = box[14];
-    box[14] = box[7];
-    box[7] = temp;
-
-    temp = box[2];
-    box[2] = box[4];
-    box[4] = box[13];
-    box[13] = box[11];
-    box[11] = temp;
-
-    temp = box[5];
-    box[5] = box[9];
-    box[9] = box[10];
-    box[10] = box[6];
-    box[6] = temp;
+    static const int rotated[] = {12,8,4,12,13,9,9,8,14,10,10,13,15};
+    for(int i=0; i<SIZE(rotated); ++i){
+	int idx = rotated[i];
+	std::swap(box[i], box[idx]);
+    }
 }
 
 
+
 void show(const Field& field){
-    char buff[32];
-    for(int y=0; y < 4; ++y){ //TODO: iterate 0 through 15
-	for(int x=0; x <4; ++x){
-	    sprintf(buff,"% 2d",field.get(x,y) );
+    char buff[4];
+    for(int y=0; y < 4; ++y){
+	for(int x=0; x < 4; ++x){
+	    sprintf(buff, "% 2d", field.get(x,y) );
 	    mvaddstr(y, x*2, (field.get(x,y) == EMPTY) ? "--" : buff );
 	}
     }
