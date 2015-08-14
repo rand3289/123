@@ -107,16 +107,16 @@ public:
 
 
 void show(const Field& field){
-    char buff[4];
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
-	    sprintf(buff, "% 2d", field.get(x,y) );
-	    mvaddstr(y, x*2, (field.get(x,y) == EMPTY) ? "--" : buff );
+	    mvprintw(y, x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
 	}
     }
     refresh(); // ncurses
 }
 
+
+void show2(const Field& field);
 
 
 int main(int argc, char* argv[]){
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]){
     Field field;
     bool run = true;
     while(run) {
-	show(field);
+	argc>1 ? show2(field) : show(field);
 	int key = getch();
 	//	cout << key << " ";
 	switch(key){
@@ -148,3 +148,61 @@ int main(int argc, char* argv[]){
     endwin(); // exit ncurses mode
     cout << field.scores() << endl;
 }
+
+
+#include <vector>
+using namespace std;
+
+vector<WINDOW*> win;
+
+void showWin(WINDOW* win, int num){
+    wclear(win);
+    mvwprintw(win, 1, 1, "*");
+    wrefresh(win);
+}
+
+
+
+void show2(const Field& field) {
+    for(int i=0; i< 16; ++i) {
+	showWin( win[i], field.get(i%4,i/4) );
+    }
+}
+                                                      
+
+
+int initShow2(){
+    win.push_back(newwin(8,16,0,0 ));
+    win.push_back(newwin(8,16,0,20));
+    win.push_back(newwin(8,16,0,40 ));
+    win.push_back(newwin(8,16,0,60 ));
+
+    win.push_back(newwin(8,16,10,0 ));
+    win.push_back(newwin(8,16,10,20 ));
+    win.push_back(newwin(8,16,10,40 ));
+    win.push_back(newwin(8,16,10,60 ));
+
+    win.push_back(newwin(8,16,20,0 ));
+    win.push_back(newwin(8,16,20,20 ));
+    win.push_back(newwin(8,16,20,40 ));
+    win.push_back(newwin(8,16,20,60 ));
+
+    win.push_back(newwin(8,16,30,0 ));
+    win.push_back(newwin(8,16,30,20 ));
+    win.push_back(newwin(8,16,30,40 ));
+    win.push_back(newwin(8,16,30,60 ));
+
+    return 0;
+}
+
+static int initInt = initShow2();
+
+string font = 
+"  ###      #     #####   #####  #       #######  #####  #######  #####   ##### " \
+" #   #    ##    #     # #     # #    #  #       #     # #    #  #     # #     #" \
+"# #   #  # #          #       # #    #  #       #           #   #     # #     #" \
+"#  #  #    #     #####   #####  #######  #####  ######     #     #####   ######" \
+"#   # #    #    #             #      #        # #     #   #     #     #       #" \
+" #   #     #    #       #     #      #  #     # #     #   #     #     # #     #" \
+"  ###    #####  #######  #####       #   #####   #####    #      #####   ##### " ;
+
