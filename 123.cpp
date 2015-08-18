@@ -105,8 +105,13 @@ public:
 };
 
 
+#include "win.h"      // optional
 
-void show(const Field& field){
+void show(const Field& field, bool large){
+#ifdef INCLUDED_WIN_H
+    static Window win;
+    if(large){ return win.show(field); }
+#endif
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
 	    mvprintw(y, x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
@@ -115,7 +120,6 @@ void show(const Field& field){
     refresh(); // ncurses
 }
 
-#include "win.h"      // optional
 
 
 int main(int argc, char* argv[]){
@@ -126,10 +130,9 @@ int main(int argc, char* argv[]){
     srand(time(0));
 
     Field field;
-    Window win;
     bool run = true;
     while(run) {
-	argc>1 ? win.show(field) : show(field);
+	show(field, argc>1);
 	int key = getch();
 	//	cout << key << " ";
 	switch(key){
