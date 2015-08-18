@@ -1,8 +1,8 @@
 // 123 is a text mode 2048 like game for UNIX terminal. It is written using ncurses library.
 // to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
-// to run with large interface type: 123 I am a meat popsicle
+// to use a large interface type: 123 I am batman
 // TODO: detect all spaces are exausted and quit instead of making the user press Q
-#include <ncurses.h>  // in emacs Ctl-x-o on this guy to open
+#include <ncurses.h>
 #include <cstdlib>    // rand() 
 #include <functional> // mem_fn()
 #include <cstdio>
@@ -110,7 +110,7 @@ public:
 
 
 
-class Window{
+class Window {
     vector<WINDOW*> win;
     const string font = 
 	"  ###      #     #####   #####  #       #######  #####  #######  #####   #####  " \
@@ -125,10 +125,11 @@ class Window{
 	werase(win);
 	box(win,0,0);
 	if(num>=0){
+	    int lo = num%10;
 	    for(int i=0; i<7; ++i){
-		wmove(win,i+1,1);
+		wmove(win,i+1,9);
 		for(int j=0; j<8; ++j){
-		    waddch(win, font[i*80 + num*8 + j] );
+		    waddch(win, font[i*80 + lo*8 + j] );
 		}
 	    }
 	}
@@ -177,8 +178,7 @@ int main(int argc, char* argv[]){
     bool run = true;
     while(run) {
 	show(field, argc>1);
-	int key = getch();
-	//	cout << key << " ";
+	int key = getch(); //	cout << key << " ";
 	switch(key){
 	    case KEY_LEFT2:
 	    case KEY_LEFT:  field.step(Field::LEFT);  break;
