@@ -1,21 +1,25 @@
-// 123 is a text mode 2048 like game for UNIX terminal
-// to compile: g++ -std=c++11 -lncurses 123.cpp
+// 123 is a text mode 2048 like game for UNIX terminal. It is written using ncurses library.
+// to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
+// to run with large interface type: 123 I am a meat popsicle
+// TODO: detect all spaces are exausted and quit instead of making the user press Q
 #include <ncurses.h>  // in emacs Ctl-x-o on this guy to open
 #include <cstdlib>    // rand() 
 #include <functional> // mem_fn()
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
-#define KEY_UP2    65
+#define KEY_UP2    65 // my laptop made me do it :)
 #define KEY_DOWN2  66
 #define KEY_RIGHT2 67
 #define KEY_LEFT2  68
 
 #define EMPTY (-1)
 #define SIZE(x) (sizeof(x)/sizeof(x[0]))
+
 
 class Field{
     bool addRand;
@@ -24,7 +28,7 @@ class Field{
 
     void addRandom(){
 	addRand = false;
-	while(true){  // TODO: detect all spaces are exausted here instead of making the user press Q
+	while(true){
 	    int& val = box[ rand()%16 ];
 	    if( EMPTY==val ){
 		val = rand()%3 ? 0 : 1; // 66% chance of getting a 0
@@ -105,13 +109,53 @@ public:
 };
 
 
-#include "win.h"      // optional
+
+class Window{
+    vector<WINDOW*> win;
+    const string font = 
+	"  ###      #     #####   #####  #       #######  #####  #######  #####   #####  " \
+	" #   #    ##    #     # #     # #    #  #       #     # #    #  #     # #     # " \
+	"# #   #  # #          #       # #    #  #       #           #   #     # #     # " \
+	"#  #  #    #     #####   #####  #######  #####  ######     #     #####   ###### " \
+	"#   # #    #    #             #      #        # #     #   #     #     #       # " \
+	" #   #     #    #       #     #      #  #     # #     #   #     #     # #     # " \
+	"  ###    #####  #######  #####       #   #####   #####    #      #####   #####  " ;
+
+    void showWin(WINDOW* win, int num){
+	werase(win);
+	box(win,0,0);
+	if(num>=0){
+	    for(int i=0; i<7; ++i){
+		wmove(win,i+1,1);
+		for(int j=0; j<8; ++j){
+		    waddch(win, font[i*80 + num*8 + j] );
+		}
+	    }
+	}
+	wrefresh(win);
+    }
+
+public:
+
+    void show(const Field& field) {
+	for(int i=0; i< 16; ++i) {
+	    showWin( win[i], field.get(i%4,i/4) );
+	}
+    }
+
+    Window() {
+	for(int i = 0; i< 16; ++i){
+	    win.push_back( newwin(9, 18, 10*(i/4), 20*(i%4)) );
+	}
+    }
+};
+
+
 
 void show(const Field& field, bool large){
-#ifdef INCLUDED_WIN_H
     static Window win;
     if(large){ return win.show(field); }
-#endif
+
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
 	    mvprintw(y, x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
