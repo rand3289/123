@@ -26,7 +26,7 @@ class Field{
     int score;
     int box[16];
 
-    void addRandom(){
+    void addRandom(){ // add 0 or 1 in a random empty cell
 	addRand = false;
 	while(true){
 	    int& val = box[ rand()%16 ];
@@ -38,7 +38,7 @@ class Field{
     }
 
 
-    void combine(int i){
+    void combine(int i){ // combine any adjacent equal squares to the left
 	if( box[i]>=0 && box[i]==box[i+1] ){
 	    ++box[i];
 	    box[i+1] = EMPTY;
@@ -48,8 +48,8 @@ class Field{
     }
 
 
-    void shift(int i){
-	if( box[i]<0 && box[i+1]>=0 ) {
+    void shift(int i){ // shift cells to the left if there are empty cells
+	if( EMPTY==box[i] && box[i+1]>=0 ) {
 	    swap( box[i], box[i+1] );
 	    addRand = true;
 	}
@@ -62,7 +62,7 @@ class Field{
     //  8  9 10 11
     // 12 13 14 15
 
-    // for each active (left 3 in each line) square
+    // call a member function on each active cell (left 3 in each line)
     void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
 	for(int i: {0,1,2, 4,5,6, 8,9,10, 12,13,14 } ){
 	    f(this,i); // lol "f this"
@@ -70,7 +70,7 @@ class Field{
     }
 
 
-    void rotate(){
+    void rotate(){ // rotate 4x4 matrix 90 degrees clockwise
 	static const int rotated[] = {12,8,4,12,13,9,9,8,14,10,10,13,15}; // guess why it works :)
 	for(int i=0; i<SIZE(rotated); ++i){
 	    int idx = rotated[i];
@@ -85,12 +85,13 @@ public:
     int get(int x, int y) const { return box[y*4+x]; }
 
     Field(): addRand(false), score(0) {
-	for(int i=0; i<16; ++i){ box[i] = EMPTY; }
+	for(int i=0; i<16; ++i){ box[i] = EMPTY; } // init all empty
 	addRandom();
     }
 
 
-    void step(Direction dir){ // take one step in the game
+    // take one step in the game. instead of shifting in many directions, rotate and shift left
+    void step(Direction dir){
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
 		foreach( std::mem_fn(&Field::shift) );
@@ -110,7 +111,7 @@ public:
 
 
 
-class Window {
+class Window { // large font interface
     vector<WINDOW*> win;
     const string font = 
 	"  ###      #     #####   #####  #       #######  #####  #######  #####   #####  " \
@@ -157,6 +158,7 @@ void show(const Field& field, bool large){
     static Window win;
     if(large){ return win.show(field); }
 
+    // small font interface
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
 	    mvprintw(y, x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
