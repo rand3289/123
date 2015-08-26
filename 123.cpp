@@ -2,12 +2,14 @@
 // to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
 // to use a large interface type: 123 I am batman
 // TODO: detect all spaces are exausted and quit instead of making the user press Q
+// TODO: display numbers above 9 in the large interface
 #include <ncurses.h>
 #include <cstdlib>    // rand() 
 #include <functional> // mem_fn()
 #include <cstdio>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <vector>
 using namespace std;
 
@@ -107,6 +109,17 @@ public:
 	    addRandom();
 	}
     }
+
+
+    void savegame(char index){
+	ofstream f( string()+index+".sav" );
+	for(int i=0; i< 16; ++i){ f << box[i] << ' '; }
+    }
+
+    void loadgame(char index){
+	ifstream f( string()+index+".sav");
+	for(int i=0; i<16; ++i){ f >> box[i]; }
+    }
 };
 
 
@@ -158,10 +171,13 @@ void show(const Field& field, bool large){
     static Window win;
     if(large){ return win.show(field); }
 
+    int maxx, maxy;
+    getmaxyx(stdscr,maxy,maxx);
+
     // small font interface
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
-	    mvprintw(y, x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
+	    mvprintw(y+(maxy-4), x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
 	}
     }
     refresh(); // ncurses
@@ -192,6 +208,13 @@ int main(int argc, char* argv[]){
 	    case KEY_DOWN:  field.step(Field::DOWN);  break;
 	    case 'Q':
 	    case 'q': run = false;                    break;
+	    default:
+		int idx = string("!@#$%^&*(").find(key); // shift + 1 through 9
+		if(idx != string::npos) {
+		    field.loadgame('1'+idx);
+		} else if(key>'0' && key <='9'){
+		    field.savegame(key);
+		}
 	}
     }
     endwin(); // exit ncurses mode
