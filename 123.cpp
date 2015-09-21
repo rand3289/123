@@ -1,6 +1,7 @@
-// 123 is a text mode 2048 like game for UNIX terminal. It is written using ncurses library.
-// to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
+// 123 is a text mode 2048 like game for UNIX terminal.
 // to use a large interface type: 123 I am batman
+// It is written using ncurses library.
+// to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
 // TODO: detect all spaces are exausted and quit instead of making the user press Q
 // TODO: display numbers above 9 in the large interface
 #include <ncurses.h>
@@ -12,12 +13,6 @@
 #include <fstream>
 #include <vector>
 using namespace std;
-
-
-#define KEY_UP2    65 // my laptop made me do it :)
-#define KEY_DOWN2  66
-#define KEY_RIGHT2 67
-#define KEY_LEFT2  68
 
 #define EMPTY (-1)
 #define SIZE(x) (sizeof(x)/sizeof(x[0]))
@@ -42,9 +37,9 @@ class Field{
 
     void combine(int i){ // combine any adjacent equal squares to the left
 	if( box[i]>=0 && box[i]==box[i+1] ){
+	    ++score;
 	    ++box[i];
 	    box[i+1] = EMPTY;
-	    ++score;
 	    addRand = true;
 	}
     }
@@ -92,14 +87,14 @@ public:
     }
 
 
-    // take one step in the game. instead of shifting in many directions, rotate and shift left
+    // Take one step in the game.  Instead of shifting in many directions, rotate to where needed, shift left, and rotate back
     void step(Direction dir){
 	for(int i = 0; i < 4; ++i){ // rotate 4 times
 	    if(dir == i){
 		foreach( std::mem_fn(&Field::shift) );
 		foreach( std::mem_fn(&Field::shift) );
 		foreach( std::mem_fn(&Field::shift) );
-		foreach( std::mem_fn(&Field::combine) );
+		foreach( std::mem_fn(&Field::combine) ); // there might be some empty cell after combine, so shift again
 		foreach( std::mem_fn(&Field::shift) );
 		foreach( std::mem_fn(&Field::shift) );
 	    }
@@ -135,19 +130,19 @@ class Window { // large font interface
 	" #   #     #    #       #     #      #  #     # #     #   #     #     # #     # " \
 	"  ###    #####  #######  #####       #   #####   #####    #      #####   #####  " ;
 
-    void showWin(WINDOW* win, int num){
-	werase(win);
-	box(win,0,0);
+    void showWin(WINDOW* window, int num){
+	werase(window);
+	box(window,0,0);
 	if(num>=0){
 	    int lo = num%10;
 	    for(int i=0; i<7; ++i){
-		wmove(win,i+1,9);
+		wmove(window,i+1,9);
 		for(int j=0; j<8; ++j){
-		    waddch(win, font[i*80 + lo*8 + j] );
+		    waddch(window, font[i*80 + lo*8 + j] );
 		}
 	    }
 	}
-	wrefresh(win);
+	wrefresh(window);
     }
 
 public:
@@ -190,6 +185,7 @@ int main(int argc, char* argv[]){
     cbreak();    // disable input buffering
     noecho();    // 
     curs_set(0); // hide the cursor
+    keypad(stdscr,true); // enable arrow keys
     srand(time(0));
 
     Field field;
@@ -198,13 +194,9 @@ int main(int argc, char* argv[]){
 	show(field, argc>1);
 	int key = getch(); //	cout << key << " ";
 	switch(key){
-	    case KEY_LEFT2:
 	    case KEY_LEFT:  field.step(Field::LEFT);  break;
-	    case KEY_RIGHT2:
 	    case KEY_RIGHT: field.step(Field::RIGHT); break;
-	    case KEY_UP2:
 	    case KEY_UP:    field.step(Field::UP);    break;
-	    case KEY_DOWN2:
 	    case KEY_DOWN:  field.step(Field::DOWN);  break;
 	    case 'Q':
 	    case 'q': run = false;                    break;
