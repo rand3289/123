@@ -85,6 +85,11 @@ public:
 	for(int i=0; i<16; ++i){ box[i] = EMPTY; } // init all empty
 	addRandom();
     }
+    void reset(){
+	for(int i=0; i<16; ++i){ box[i] = EMPTY; } // init all empty
+	addRandom();
+	score = 0;
+    }
 
 
     // Take one step in the game.  Instead of shifting in many directions, rotate to where needed, shift left, and rotate back
@@ -200,6 +205,8 @@ int main(int argc, char* argv[]){
 	    case KEY_DOWN:  field.step(Field::DOWN);  break;
 	    case 'Q':
 	    case 'q': run = false;                    break;
+	    case 'R':
+	    case 'r': field.reset();		      break;
 	    default:
 		int idx = string("!@#$%^&*(").find(key); // shift + 1 through 9
 		if(idx != string::npos) {
