@@ -1,11 +1,12 @@
-// 123 is a text mode 2048 like game for UNIX terminal.
-// to use a large interface type: 123 I am batman
-// It is written using ncurses library.
-// to compile: g++ -o 123 -std=c++11 123.cpp -lncurses
+// 123 is a text mode 2048 like game for UNIX terminal
+// To run with a large interface type: 123 I am batman
+// To compile: g++ -o 123 -std=c++11 123.cpp -lncurses
+// It is written using ncurses library
+// If you are missing ncurses library: sudo apt-get install libncurses5-dev
 // TODO: detect all spaces are exausted and quit instead of making the user press Q
 // TODO: display numbers above 9 in the large interface
 #include <ncurses.h>
-#include <cstdlib>    // rand() 
+#include <cstdlib>    // rand()
 #include <functional> // mem_fn()
 #include <cstdio>
 #include <string>
