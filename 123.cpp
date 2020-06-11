@@ -1,7 +1,7 @@
 // 123 is a text mode 2048 like game for UNIX terminal.
 // to use a large interface type: 123 I am batman
 // It is written using ncurses library.
-// to compile: g++ -o 123 -std=c++11 -lncurses 123.cpp
+// to compile: g++ -o 123 -std=c++11 123.cpp -lncurses
 // TODO: detect all spaces are exausted and quit instead of making the user press Q
 // TODO: display numbers above 9 in the large interface
 #include <ncurses.h>
@@ -127,13 +127,13 @@ public:
 class Window { // large font interface
     vector<WINDOW*> win;
     const string font = 
-	"  ###      #     #####   #####  #       #######  #####  #######  #####   #####  " \
-	" #   #    ##    #     # #     # #    #  #       #     # #    #  #     # #     # " \
+	"  ###      #     #####   #####  #    #  #######  #####  #######  #####   #####  " \
+	" #   #    ##    #     #       # #    #  #       #       #    #  #     # #     # " \
 	"# #   #  # #          #       # #    #  #       #           #   #     # #     # " \
 	"#  #  #    #     #####   #####  #######  #####  ######     #     #####   ###### " \
 	"#   # #    #    #             #      #        # #     #   #     #     #       # " \
-	" #   #     #    #       #     #      #  #     # #     #   #     #     # #     # " \
-	"  ###    #####  #######  #####       #   #####   #####    #      #####   #####  " ;
+	" #   #     #    #             #      #        # #     #   #     #     #       # " \
+	"  ###      #    #######  #####       #  ######   #####    #      #####   #####  " ;
 
     void showWin(WINDOW* window, int num){
 	werase(window);
