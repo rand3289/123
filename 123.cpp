@@ -7,7 +7,7 @@
 // TODO: display numbers above 9 in the large interface
 #include <ncurses.h>
 #include <cstdlib>    // rand()
-#include <functional> // mem_fn()
+#include <functional> // function<>, mem_fn()
 #include <cstdio>
 #include <string>
 #include <iostream>
@@ -61,7 +61,7 @@ class Field{
     // 12 13 14 15
 
     // call a member function on each active cell (left 3 in each line)
-    void foreach( std::_Mem_fn<void (Field::*)(int)> f ){
+    void foreach( function<void (Field*, int)> f ){
 	for(int i: {0,1,2, 4,5,6, 8,9,10, 12,13,14 } ){
 	    f(this,i); // lol "f this"
 	}
