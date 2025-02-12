@@ -136,6 +136,7 @@ class Window { // large font interface
 	" #   #     #    #             #      #        # #     #   #     #     #       # #     # #     # #     # #     # #       #       " \
 	"  ###      #    #######  #####       #  ######   #####    #      #####   #####  #     # ######   #####  ######  ####### #       " ;
 	#define FONT_LEN (font.length()/(8*7)) // each character is 8x7
+
     void showWin(WINDOW* window, int num){
 	werase(window);
 	box(window,0,0);
@@ -178,7 +179,7 @@ void show(const Field& field, bool large){
     // small font interface
     for(int y=0; y < 4; ++y){
 	for(int x=0; x < 4; ++x){
-	    mvprintw(y+(maxy-4), x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2d", field.get(x,y) );
+	    mvprintw(y+(maxy-4), x*2, (field.get(x,y) == EMPTY) ? "--" : "% 2X", field.get(x,y) );
 	}
     }
     refresh(); // ncurses
